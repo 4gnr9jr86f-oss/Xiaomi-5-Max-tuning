@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#080c12">
+<title>TeaHack Scooter Control</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #080c12;
+  --panel: #111923;
+  --line: #243342;
+  --accent: #48f0a5;
+  --blue: #4ca8ff;
+  --text: #f0f6fc;
+  --muted: #8798aa;
+  --danger: #ff647c;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+header {
+  padding: 24px 20px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.brand { font-weight: 900; letter-spacing: 2px; font-size: 19px; }
+.brand span { color: var(--accent); }
+.pill {
+  font-size: 11px;
+  color: var(--accent);
+  border: 1px solid #245c47;
+  padding: 7px 10px;
+  border-radius: 30px;
+}
+main { padding: 8px 16px 100px; max-width: 620px; margin: auto; }
+.eyebrow {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.hero {
+  background: radial-gradient(ellipse at 50% 20%, #19372f, #111923 65%);
+  border: 1px solid var(--line);
+  border-radius: 25px;
+  padding: 25px 20px;
+  text-align: center;
+}
+.speed {
+  font-size: 76px;
+  font-weight: 800;
+  letter-spacing: -4px;
+  margin: 15px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.unit { color: var(--muted); font-size: 13px; }
+.scooter {
+  width: 100%;
+  height: 110px;
+  margin: 12px 0;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-top: 18px;
+}
+.stat {
+  padding: 14px 6px;
+  border-radius: 14px;
+  background: #0b1119;
+  border: 1px solid var(--line);
+}
+.value { font-size: 18px; font-weight: 750; }
+.label { color: var(--muted); font-size: 10px; margin-top: 6px; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 19px;
+  padding: 18px;
+  margin-top: 15px;
+}
+.card h2 { font-size: 15px; margin: 0 0 16px; }
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+}
+.row + .row { border-top: 1px solid var(--line); }
+.row strong { font-size: 13px; }
+.small { color: var(--muted); font-size: 11px; margin-top: 5px; }
+button, select {
+  font: inherit;
+  color: var(--text);
+  background: #192532;
+  border: 1px solid #314657;
+  border-radius: 11px;
+  padding: 11px 13px;
+}
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.primary {
+  background: var(--accent);
+  color: #04120b;
+  border: none;
+  font-weight: 800;
+}
+.full { width: 100%; margin-top: 12px; }
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mode { padding: 13px 5px; font-size: 12px; }
+.mode.active { color: var(--accent); border-color: var(--accent); background: #12251f; }
+input[type=range] { width: 100%; accent-color: var(--accent); margin: 15px 0; }
+.note { color: var(--muted); font-size: 11px; line-height: 1.6; }
+.status { color: var(--muted); font-size: 12px; line-height: 1.5; }
+nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: space-around;
+  background: #0b1119f5;
+  border-top: 1px solid var(--line);
+  padding: 13px 5px max(13px, env(safe-area-inset-bottom));
+  backdrop-filter: blur(16px);
+}
+nav button { border: 0; background: transparent; font-size: 11px; color: var(--muted); }
+nav button.active { color: var(--accent); }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">TEA<span>HACK</span></div>
+  <div class="pill" id="connectionBadge">● OFFLINE</div>
+</header>
+
+<main>
+<section id="dashboard">
+  <div class="hero">
+    <div class="eyebrow">Live vehicle dashboard</div>
+    <div class="speed" id="speed">0.0</div>
+    <div class="unit">km/h · DEMO DATA</div>
+
+    <svg class="scooter" viewBox="0 0 320 120" fill="none"
+         xmlns="http://www.w3.org/2000/svg" aria-label="Scooter illustration">
+      <circle cx="75" cy="87" r="23" stroke="#48f0a5" stroke-width="5"/>
+      <circle cx="248" cy="87" r="23" stroke="#48f0a5" stroke-width="5"/>
+      <circle cx="75" cy="87" r="6" fill="#48f0a5"/>
+      <circle cx="248" cy="87" r="6" fill="#48f0a5"/>
+      <path d="M75 85 L103 84 L137 83 L176 83 L217 83 L248 85"
+            stroke="#dce9f2" stroke-width="8" stroke-linecap="round"/>
+      <path d="M104 81 L124 37 L160 37" stroke="#48f0a5"
+            stroke-width="6" stroke-linecap="round"/>
+      <path d="M160 37 L170 80" stroke="#dce9f2" stroke-width="6"/>
+      <path d="M145 30 L177 30" stroke="#dce9f2" stroke-width="6"
+            stroke-linecap="round"/>
+      <rect x="135" y="74" width="46" height="11" rx="4" fill="#48f0a5"/>
+      <path d="M224 67 L238 67" stroke="#ff647c" stroke-width="5"
+            stroke-linecap="round"/>
+    </svg>
+
+    <div class="stats">
+      <div class="stat"><div class="value" id="battery">--%</div><div class="label">BATTERY</div></div>
+      <div class="stat"><div class="value" id="voltage">-- V</div><div class="label">VOLTAGE</div></div>
+      <div class="stat"><div class="value" id="distance">0.0 km</div><div class="label">SESSION</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Bluetooth connection</h2>
+    <div class="row">
+      <div><strong>Vehicle</strong><div class="small" id="deviceName">No device connected</div></div>
+      <button class="primary" id="connect">Scan devices</button>
+    </div>
+    <p class="status" id="bluetoothStatus">
+      Bluefy supports Web Bluetooth on compatible iOS devices.
+      A device appearing in the picker does not guarantee Xiaomi protocol support.
+    </p>
+    <button class="full" id="disconnect" hidden>Disconnect</button>
+  </div>
+
+  <div class="card">
+    <h2>Ride profile</h2>
+    <div class="modes">
+      <button class="mode active" data-mode="Eco">ECO</button>
+      <button class="mode" data-mode="Drive">DRIVE</button>
+      <button class="mode" data-mode="Sport">SPORT</button>
+    </div>
+    <p class="note" id="modeDescription">
+      Eco profile selected in this dashboard. This does not change the scooter controller.
+    </p>
+  </div>
+</section>
+
+<section id="settings" hidden>
+  <div class="card">
+    <h2>Dashboard settings</h2>
+    <div class="row">
+      <div><strong>Display units</strong><div class="small">Speed measurement</div></div>
+      <select id="units"><option value="kmh">km/h</option><option value="mph">mph</option></select>
+    </div>
+    <div class="row">
+      <div><strong>Screen brightness</strong><div class="small">Dashboard appearance</div></div>
+      <input id="brightness" type="range" min="60" max="100" value="100" style="width:100px">
+    </div>
+    <div class="row">
+      <div><strong>Session distance</strong><div class="small">Local demonstration counter</div></div>
+      <button id="resetSession">Reset</button>
+    </div>
+    <p class="note">Settings are local to this page. Controller firmware settings are not modified.</p>
+  </div>
+</section>
+
+<section id="diagnostics" hidden>
+  <div class="card">
+    <h2>Device diagnostics</h2>
+    <div class="row"><strong>Web Bluetooth API</strong><span id="apiStatus">Checking…</span></div>
+    <div class="row"><strong>Secure context</strong><span id="secureStatus">Checking…</span></div>
+    <div class="row"><strong>Selected device</strong><span id="diagDevice">None</span></div>
+    <div class="row"><strong>Telemetry source</strong><span id="sourceStatus">Demo</span></div>
+    <p class="note">
+      Xiaomi scooters use model- and firmware-dependent BLE services.
+      UUIDs, authentication and writable characteristics must be verified
+      against the exact controller before reading or changing settings.
+    </p>
+  </div>
+</section>
+</main>
+
+<nav aria-label="Main navigation">
+  <button class="active" data-page="dashboard">⌂<br>Dashboard</button>
+  <button data-page="settings">⚙<br>Settings</button>
+  <button data-page="diagnostics">⌁<br>Diagnostics</button>
+</nav>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+
+const state = {
+  device: null,
+  server: null,
+  mode: "Eco",
+  connected: false,
+  sessionKm: 0,
+  units: "kmh",
+  demo: true,
+  generation: 0
+};
+
+const modeDescriptions = {
+  Eco: "Eco profile selected in this dashboard. This does not change the scooter controller.",
+  Drive: "Drive profile selected in this dashboard. Controller settings remain unchanged.",
+  Sport: "Sport profile selected in this dashboard. No speed limit or safety feature is altered."
+};
+
+function setStatus(message) {
+  $("bluetoothStatus").textContent = message;
+}
+
+function render() {
+  $("connectionBadge").textContent = state.connected ? "● CONNECTED" : "● OFFLINE";
+  $("connectionBadge").style.color = state.connected ? "var(--accent)" : "var(--muted)";
+  $("deviceName").textContent = state.device?.name || "No device connected";
+  $("diagDevice").textContent = state.device?.name || "None";
+  $("sourceStatus").textContent = state.demo ? "Demo" : "BLE connected";
+  $("disconnect").hidden = !state.device;
+  $("connect").textContent = state.connected ? "Connected" : "Scan devices";
+  $("apiStatus").textContent = navigator.bluetooth ? "Available" : "Unavailable";
+  $("secureStatus").textContent = window.isSecureContext ? "Yes" : "No";
+  $("distance").textContent = state.sessionKm.toFixed(1) + " km";
+
+  document.querySelectorAll("[data-mode]").forEach(button => {
+    button.classList.toggle("active", button.dataset.mode === state.mode);
+  });
+  $("modeDescription").textContent = modeDescriptions[state.mode];
+}
+
+async function connectBluetooth() {
+  if (!navigator.bluetooth) {
+    setStatus("Web Bluetooth unavailable. Open this page in a compatible Bluefy version over HTTPS.");
+    return;
+  }
+
+  if (!window.isSecureContext) {
+    setStatus("A secure HTTPS context is required for Web Bluetooth.");
+    return;
+  }
+
+  const generation = ++state.generation;
+  $("connect").disabled = true;
+
+  try {
+    // Discovery only: no undocumented service UUIDs or writes.
+    const device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true
+    });
+
+    if (generation !== state.generation) return;
+
+    state.device = device;
+    state.connected = false;
+    state.demo = true;
+
+    device.addEventListener("gattserverdisconnected", () => {
+      if (state.device !== device) return;
+      state.connected = false;
+      state.server = null;
+      state.demo = true;
+      render();
+      setStatus("Bluetooth device disconnected. Demo telemetry remains active.");
+    });
+
+    render();
+    setStatus(
+      "Device discovered: " + (device.name || "Unnamed device") +
+      ". Select a verified service implementation to read actual telemetry."
+    );
+
+    // Generic discovery cannot establish Xiaomi compatibility.
+    // Connect only after the model's supported service has been verified.
+  } catch (error) {
+    if (error.name === "NotFoundError") {
+      setStatus("No device selected.");
+    } else {
+      setStatus("Bluetooth error: " + error.message);
+    }
+  } finally {
+    $("connect").disabled = false;
+  }
+}
+
+function disconnectBluetooth() {
+  state.generation++;
+  if (state.device?.gatt?.connected) {
+    state.device.gatt.disconnect();
+  }
+  state.device = null;
+  state.server = null;
+  state.connected = false;
+  state.demo = true;
+  render();
+  setStatus("Disconnected.");
+}
+
+$("connect").addEventListener("click", connectBluetooth);
+$("disconnect").addEventListener("click", disconnectBluetooth);
+
+document.querySelectorAll("[data-mode]").forEach(button => {
+  button.addEventListener("click", () => {
+    state.mode = button.dataset.mode;
+    render();
+  });
+});
+
+document.querySelectorAll("[data-page]").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-page]").forEach(item =>
+      item.classList.toggle("active", item === button)
+    );
+    ["dashboard", "settings", "diagnostics"].forEach(page => {
+      $(page).hidden = page !== button.dataset.page;
+    });
+  });
+});
+
+$("units").addEventListener("change", event => {
+  state.units = event.target.value;
+  $("speed").nextElementSibling.textContent =
+    state.units === "kmh" ? "km/h · DEMO DATA" : "mph · DEMO DATA";
+});
+
+$("brightness").addEventListener("input", event => {
+  document.body.style.opacity = Number(event.target.value) / 100;
+});
+
+$("resetSession").addEventListener("click", () => {
+  state.sessionKm = 0;
+  render();
+});
+
+// Clearly labelled placeholder values; never presented as live scooter data.
+$("speed").textContent = "0.0";
+$("battery").textContent = "--%";
+$("voltage").textContent = "-- V";
+
+render();
+</script>
+</body>
+</html>
